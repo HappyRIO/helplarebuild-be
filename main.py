@@ -37,3 +37,20 @@ async def search(inp: Msg):
     return result
 
 app.mount("/", StaticFiles(directory="static",html = True), name="static")
+
+sudo nano /etc/nginx/sites-available/helplarebuild.net
+
+server {
+    listen 80;
+    server_name helplarebuild.net;
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+.add()
+sudo ln -s /etc/nginx/sites-available/helplarebuild.net /etc/nginx/sites-enabled/
