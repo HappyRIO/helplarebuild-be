@@ -1,24 +1,24 @@
-from dotenv import load_dotenv
-from os import getenv
+import os
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from pymilvus import MilvusClient
 from pydantic import BaseModel
-from search_engine import SearchEngine
-from indexer import Indexer
-from database import ChatDatabase
-
+from dotenv import load_dotenv
 load_dotenv()
 
-# Initialize Faiss-based Indexer & SearchEngine
-index_file = "faiss_index.bin"
-metadata_file = "metadata.csv"
-embedding_dim = 768  # Adjust based on your embedding model
+from search_engine import SearchEngine
+from indexer import Indexer
 
-indexer = Indexer(index_file, metadata_file, embedding_dim)
-searchEngine = SearchEngine(index_file, metadata_file)
-chat_database = ChatDatabase()
+milvus_client = MilvusClient(
+            uri=os.getenv("MILVUS_URI"),
+            token=os.getenv("MILVUS_TOKEN")
+        )
+milvus_collection_name = os.getenv("MILVUS_COLLECTION_NAME")
+
+indexer = Indexer(milvus_client, milvus_collection_name)
+searchEngine = SearchEngine(milvus_client, milvus_collection_name)
 
 print("✅ Server is running...")
 
@@ -37,14 +37,9 @@ class Msg(BaseModel):
 
 @app.post("/api/search")
 async def search(inp: Msg):
-    db_result = chat_database.query_database(inp.msg)
-
-    if db_result:
-        return StreamingResponse(db_result, media_type='text/event-stream')
-
     search_result = searchEngine.search(inp.msg)
 
-    return StreamingResponse(search_result, media_type='text/event-stream')
+    return search_result
 
 @app.post("/api/create_index")
 async def create_index(inp: Msg):

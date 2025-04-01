@@ -1,5 +1,8 @@
 from common_helper import create_embedding
 import openai
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class SearchEngine:
     def __init__(self, milvus_client, milvus_collection_name):
@@ -30,10 +33,6 @@ class SearchEngine:
         return self.query_milvus(embedding)
   
     def ask_chatgpt(self, knowledge_base, user_query):
-        # system_content = """You are an AI coding assistant designed to help users with their programming needs based on the Knowledge Base provided.
-        # If you dont know the answer, say that you dont know the answer. You will only answer questions related to fly.io, any other questions, you should say that its out of your responsibilities.
-        # Only answer questions using data from knowledge base and nothing else.
-        # """
         system_content = """You are an AI assistant for Help LA Rebuild. Your role is to retrieve and summarize information from the provided database of curated resources including official weblinks, PDF’s, and verified information related to the LA wildfires. 
         Your role is to listen to the user, understand their needs, process their question and retrieve information from the database to assist them in finding correct resources that answer their question.
         You structure responses with direct answers and links to each resource and suggest follow-up steps if relevant. 
@@ -53,7 +52,7 @@ class SearchEngine:
         """
         system_message = {"role": "system", "content": system_content}
         user_message = {"role": "user", "content": user_content}
-        OPENAI_API_KEY="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"
+        OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
         client = openai.Client(api_key=OPENAI_API_KEY)
         chatgpt_response = client.chat.completions.create(
         model="gpt-4-turbo",
